@@ -1,8 +1,10 @@
  --TIENDA--
  --1  
- SELECT nombre FROM productos
+ SELECT nombre FROM producto
+ --2
+ SELECT nombre, precio FROM producto
 --3  
-SELECT * FROM productos
+SELECT * FROM producto
 --4  
 SELECT nombre, precio, ROUND(precio / 0.93, 2)  FROM producto
 --5  
@@ -78,7 +80,7 @@ SELECT * FROM producto WHERE precio = (SELECT MAX(precio) FROM producto WHERE co
 --40
 SELECT producto.nombre FROM producto WHERE precio >= (SELECT  producto.precio FROM producto   INNER JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo WHERE fabricante.nombre = "Lenovo" ORDER BY precio DESC LIMIT 1) 
 --41     precio medio
-SELECT * FROM producto, fabricante WHERE precio > (SELECT AVG(precio) FROM producto WHERE fabricante.nombre = "Asus")
+SELECT * FROM producto WHERE precio > (SELECT AVG(precio) FROM producto INNER JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo WHERE fabricante.nombre = "Asus")
 
 --UNIVERSIDAD--
 --1     Se puede asignar el orden con numeros  ORDER BY 1, 2, 3 ASC
@@ -94,17 +96,17 @@ SELECT * FROM asignatura WHERE cuatrimestre = 1 and curso = 3 and id_grado = 7
 --6
  SELECT  p.apellido1 AS primer_apellido, p.apellido2 AS segundo_apellido, p.nombre, dep.nombre  AS nombre_departamento FROM persona p INNER JOIN departamento dep ON  dep.id = p.id WHERE tipo = 'profesor'  ORDER BY 1, 2, 3 ASC
 --7
-SELECT  DISTINCT a.nombre, ce.anyo_inicio, ce.anyo_fin FROM asignatura a INNER JOIN curso_escolar ce ON a.id = ce.id INNER JOIN  alumno_se_matricula_asignatura am ON ce.id = am.id_alumno INNER JOIN persona p ON am.id_alumno = p.id WHERE nif = '26902806M'
+SELECT  DISTINCT a.nombre, ce.anyo_inicio, ce.anyo_fin FROM asignatura a INNER JOIN curso_escolar ce ON a.id = ce.id INNER JOIN  alumno_se_matricula_asignatura am ON ce.id = am.id_alumno INNER JOIN persona per ON am.id_alumno = per.id WHERE per.nif = '26902806M'
 --8
-SELECT dep.nombre AS departamento , per.nombre AS profesor , a.nombre AS asignatura FROM departamento dep INNER JOIN profesor pro ON dep.id = pro.id_departamento INNER JOIN persona per ON pro.id_departamento = per.id INNER JOIN asignatura a ON per.id = a.id INNER JOIN grado g ON a.id_grado = g.id WHERE per.tipo = 'profesor' AND g.nombre = 'Grado en Ingeniería Informática (Plan 2015)'
+SELECT dep.nombre AS departamentos , per.nombre AS profesor , a.nombre AS asignatura FROM departamento dep INNER JOIN profesor pro ON dep.id = pro.id_departamento INNER JOIN persona per ON pro.id_profesor = per.id INNER JOIN asignatura a ON per.id = a.id INNER JOIN grado g ON a.id_grado = g.id WHERE per.tipo = 'profesor' AND g.nombre = 'Grado en Ingeniería Informática (Plan 2015)'
 --9
-SELECT per.nombre AS nombre, per.apellido1 AS primer_apellido, per.apellido2 AS segundo_apellido, a.nombre asignatura FROM persona per INNER JOIN alumno_se_matricula_asignatura am ON per.id = am.id_alumno INNER JOIN curso_escolar ce ON am.id_curso_escolar = ce.id INNER JOIN asignatura a ON am.id_asignatura = a.id WHERE per.tipo = 'alumno' AND ce.anyo_inicio = 2018 AND ce.anyo_fin = 2019
+SELECT DISTINCT  per.nombre AS nombre, per.apellido1 AS primer_apellido, per.apellido2 AS segundo_apellido FROM persona per INNER JOIN alumno_se_matricula_asignatura am ON per.id = am.id_alumno INNER JOIN curso_escolar ce ON am.id_curso_escolar = ce.id INNER JOIN asignatura a ON am.id_asignatura = a.id WHERE  per.tipo = 'alumno' AND ce.anyo_inicio = 2018 AND ce.anyo_fin = 2019
 
 --LEFT JOIN y RIGHT JOIN.
 --1
-SELECT dep.nombre AS nombre_departamento, per.apellido1 AS primer_apellido, per.apellido2 AS segundo_apellido, per.nombre AS nombre_profesor FROM persona per LEFT JOIN departamento dep ON per.id = dep.id WHERE per.tipo = 'profesor' ORDER BY 1, 2, 3, 4 ASC
+SELECT dep.nombre AS nombre_departamento, per.apellido1 AS primer_apellido, per.apellido2 AS segundo_apellido, per.nombre AS nombre_profesor FROM persona per INNER JOIN profesor pro ON per.id = pro.id_profesor LEFT JOIN departamento dep ON pro.id_profesor = dep.id ORDER BY dep.nombre, per.apellido1, per.apellido2, per.nombre   ASC
 --2
-SELECT  per.apellido1 AS primer_apellido, per.apellido2 AS segundo_apellido, per.nombre AS nombre_profesor FROM persona per LEFT JOIN departamento dep ON per.id = dep.id WHERE per.tipo = 'profesor' AND dep.nombre IS null 
+SELECT  per.apellido1 AS primer_apellido, per.apellido2 AS segundo_apellido, per.nombre AS nombre_profesor, dep.nombre AS nombre_departamento FROM persona per INNER JOIN profesor pro ON per.id = pro.id_profesor LEFT JOIN departamento dep ON pro.id_profesor = dep.id WHERE  dep.nombre IS null 
 --3
 SELECT per.nombre AS nombre_profesor, dep.nombre AS nombre_departamento FROM persona per  INNER JOIN profesor pro ON per.id = pro.id_profesor RIGHT JOIN departamento dep ON pro.id_departamento = dep.id WHERE per.nombre IS null
 --4
@@ -126,11 +128,11 @@ SELECT dep.nombre AS Nombre_Departamento, COUNT(pro.id_departamento) AS Nº_Prof
 --5
 SELECT g.nombre AS Grados, count(a.id_grado) AS Nº_asignaturas FROM grado g LEFT JOIN asignatura a ON g.id = a.id_grado GROUP BY g.nombre ORDER BY 2 DESC
 --6
-
+SELECT g.nombre AS nombre_grado, COUNT(a.id) AS numero_de_asignaturas FROM grado g JOIN asignatura a ON g.id = a.id_grado GROUP BY g.nombre HAVING COUNT(a.id)> 40;
 --7
-
+SELECT g.nombre AS nombre_grado, a.tipo AS tipo_asignatura, SUM(a.creditos) AS total_creditos FROM grado g INNER JOIN asignatura a ON g.id = a.id_grado GROUP BY g.nombre, a.tipo;
 --8
-SELECT ce.anyo_inicio AS Año_Inicio_Curso, count(am.id_alumno) AS Nº_Alumnos_Matriculados  FROM curso_escolar ce LEFT JOIN alumno_se_matricula_asignatura am ON ce.id = am.id_curso_escolar GROUP BY ce.anyo_inicio ORDER BY count(am.id_alumno)
+SELECT ce.anyo_inicio AS Año_Inicio_Curso, COUNT(DISTINCT am.id_alumno) AS Nº_Alumnos_Matriculados  FROM curso_escolar ce  LEFT JOIN alumno_se_matricula_asignatura am ON ce.id = am.id_curso_escolar GROUP BY ce.anyo_inicio ORDER BY count(am.id_alumno)
 --9
 SELECT per.id As Id_Profesor, per.nombre AS Nombre_Profesor, per.apellido1 AS Primer_Apellido, per.apellido2 AS Segundo_Apellido, count(a.id_profesor) AS Nº_Asignaturas FROM asignatura a RIGHT JOIN profesor pro ON a.id_profesor = pro.id_profesor INNER JOIN persona per ON pro.id_profesor = per.id GROUP BY  pro.id_profesor ORDER BY count(a.id_profesor) DESC
 --10
